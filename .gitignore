@@ -1,0 +1,13 @@
+# ─── Backend secrets ──────────────────────────────────
+banking-backend/src/main/resources/application.properties
+
+# ─── Backend build ────────────────────────────────────
+banking-backend/target/
+
+# ─── Frontend dependencies ────────────────────────────
+banking-frontend/node_modules/
+banking-frontend/dist/
+
+# ─── OS ───────────────────────────────────────────────
+.DS_Store
+Thumbs.db
