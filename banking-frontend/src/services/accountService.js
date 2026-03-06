@@ -10,9 +10,4 @@ export const accountService = {
     const response = await api.get('/accounts')
     return response.data
   },
-
-  getAccount: async (accountNumber) => {
-    const response = await api.get(`/accounts/${accountNumber}`)
-    return response.data
-  },
 }
