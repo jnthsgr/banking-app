@@ -203,7 +203,3 @@ MIT License — free to use for learning and portfolio purposes.
 ```
 
 ---
-
-Click **Commit changes** with message:
-```
-Add complete README with setup guide and project documentation
