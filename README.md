@@ -196,10 +196,3 @@ If debiting account A succeeds but crediting account B fails, the entire operati
 Prevents leaking internal fields like hashed passwords, controls exactly what the API exposes, and decouples the database schema from the API contract.
 
 ---
-
-## 📄 License
-
-MIT License — free to use for learning and portfolio purposes.
-```
-
----
