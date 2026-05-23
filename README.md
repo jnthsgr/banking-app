@@ -1,13 +1,13 @@
-# 🏦 Banking Application
+#  Banking Application
 
 A full-stack banking system built with **Spring Boot 3** and **React**. Features JWT authentication, account management, and real-time fund transfers with full transaction history.
 
-🔗 **Live Demo:** _Coming soon_  
+ **Live Demo:** _Coming soon_  
 📁 **Repo:** [github.com/jnthsgr/banking-app](https://github.com/jnthsgr/banking-app)
 
 ---
 
-## 📌 What This Project Does
+##  What This Project Does
 
 This is a functional banking application where users can:
 
@@ -19,7 +19,7 @@ This is a functional banking application where users can:
 
 ---
 
-## 🧱 Tech Stack
+##  Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -36,7 +36,7 @@ This is a functional banking application where users can:
 
 ---
 
-## 🗂️ Project Structure
+##  Project Structure
 ```
 banking-app/
 ├── banking-backend/                  # Spring Boot REST API
@@ -61,7 +61,7 @@ banking-app/
 
 ---
 
-## 🔐 How Authentication Works
+##  How Authentication Works
 
 1. User registers → password is **BCrypt hashed** → saved to MySQL
 2. User logs in → server validates password → returns a **signed JWT token**
@@ -71,7 +71,7 @@ banking-app/
 
 ---
 
-## 🌐 API Endpoints
+##  API Endpoints
 
 | Method | Endpoint | Auth Required | Description |
 |--------|----------|---------------|-------------|
@@ -87,7 +87,7 @@ banking-app/
 
 ---
 
-## ⚙️ Setup — Backend
+##  Setup — Backend
 
 ### Prerequisites
 - Java 17+
@@ -129,7 +129,7 @@ Hibernate auto-creates all tables on first run.
 
 ---
 
-## ⚙️ Setup — Frontend
+##  Setup — Frontend
 
 ### Prerequisites
 - Node.js 18+
@@ -145,7 +145,7 @@ Frontend runs at `http://localhost:5173`
 
 ---
 
-## 📊 Database Schema
+##  Database Schema
 ```
 users
 ├── id (PK)
@@ -181,7 +181,7 @@ transactions
 
 ---
 
-## 🔑 Key Technical Decisions
+##  Key Technical Decisions
 
 **Why JWT over sessions?**  
 Stateless authentication scales better — no server-side session storage needed. Every request is self-contained.
