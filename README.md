@@ -3,7 +3,7 @@
 A full-stack banking system built with **Spring Boot 3** and **React**. Features JWT authentication, account management, and real-time fund transfers with full transaction history.
 
  **Live Demo:** _Coming soon_  
-📁 **Repo:** [github.com/jnthsgr/banking-app](https://github.com/jnthsgr/banking-app)
+ **Repo:** [github.com/jnthsgr/banking-app](https://github.com/jnthsgr/banking-app)
 
 ---
 
