@@ -46,6 +46,7 @@ Bank staff (role `ADMIN`) get a back-office console to:
 | HTTP Client | Axios |
 | Routing | React Router DOM |
 | Typography | Inter / Fraunces (Google Fonts) |
+| Containerization | Docker Compose (MySQL + Spring Boot + nginx) |
 
 ---
 
@@ -114,7 +115,56 @@ banking-app/
 
 ---
 
-## Setup — Backend
+## Run with Docker
+
+The fastest way to run the whole stack — MySQL, the Spring Boot API, and the React frontend behind nginx — is Docker Compose.
+
+### Prerequisites
+- Docker and Docker Compose
+
+### Steps
+
+**1. Clone the repository**
+```bash
+git clone https://github.com/jnthsgr/banking-app.git
+cd banking-app
+```
+
+**2. Configure environment variables**
+```bash
+cp .env.example .env
+```
+
+Open `.env` and set real values for `MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD`, and `JWT_SECRET` (32+ characters). The defaults in `.env.example` are placeholders only — never use them as-is.
+
+**3. Build and start everything**
+```bash
+docker compose up -d --build
+```
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:8080 |
+| MySQL (host access) | localhost:3307 |
+
+MySQL starts first and the backend waits for it to report healthy before connecting. Hibernate creates all tables on first boot against a **fresh, empty database** — there's no seed or test data, so the first thing to do is register a real account through the UI.
+
+**4. Stop everything**
+```bash
+docker compose down        # stop containers, keep the database volume
+docker compose down -v     # stop containers and wipe the database volume
+```
+
+To promote a user to `ADMIN` for the back office, connect to the containerized MySQL and update their role directly:
+```bash
+docker compose exec mysql mysql -u root -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" \
+  -e "UPDATE users SET role='ADMIN' WHERE email='you@example.com';"
+```
+
+---
+
+## Setup — Backend (without Docker)
 
 ### Prerequisites
 - Java 17+
@@ -156,7 +206,7 @@ Hibernate auto-creates all tables on first run. The first registered user is a `
 
 ---
 
-## Setup — Frontend
+## Setup — Frontend (without Docker)
 
 ### Prerequisites
 - Node.js 18+

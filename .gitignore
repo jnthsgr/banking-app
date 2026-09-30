@@ -1,6 +1,9 @@
 # ─── Backend secrets ──────────────────────────────────
 banking-backend/src/main/resources/application.properties
 
+# ─── Docker secrets ───────────────────────────────────
+.env
+
 # ─── Backend build ────────────────────────────────────
 banking-backend/target/
 

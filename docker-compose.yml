@@ -1,0 +1,48 @@
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-saagar_capital_finance}
+      MYSQL_USER: ${MYSQL_USER:-scf_app}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-scf_app_password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-scf_root_password}
+    ports:
+      - "${MYSQL_PORT:-3307}:3306"
+    volumes:
+      - scf_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-scf_root_password}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build: ./banking-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-saagar_capital_finance}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-scf_app}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-scf_app_password}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JWT_SECRET: ${JWT_SECRET:-local-docker-secret-please-change-this-in-production-32chars}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+
+  frontend:
+    build:
+      context: ./banking-frontend
+      args:
+        VITE_API_BASE_URL: http://localhost:${BACKEND_PORT:-8080}/api
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+
+volumes:
+  scf_mysql_data:
