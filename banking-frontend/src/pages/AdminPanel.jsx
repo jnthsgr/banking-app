@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import Navbar from '../components/Navbar'
+import AppLayout from '../components/AppLayout'
 import { adminService } from '../services/adminService'
 import { formatCurrency } from '../utils/formatCurrency'
 
@@ -47,8 +47,7 @@ export default function AdminPanel() {
   }
 
   return (
-    <div style={styles.page}>
-      <Navbar />
+    <AppLayout section="Back Office">
       <div style={styles.container}>
         <h1 style={styles.title}>Back Office</h1>
         <p style={styles.subtitle}>Customer and account oversight for Saagar Capital Finance staff.</p>
@@ -144,13 +143,12 @@ export default function AdminPanel() {
           )}
         </div>
       </div>
-    </div>
+    </AppLayout>
   )
 }
 
 const styles = {
-  page: { minHeight: '100vh', background: 'var(--scf-bg)' },
-  container: { maxWidth: '1100px', margin: '0 auto', padding: '32px 24px' },
+  container: { maxWidth: '1100px', margin: '0 auto', padding: '4px 0 32px' },
   title: { fontSize: '24px', fontWeight: '700', color: 'var(--scf-navy)' },
   subtitle: { fontSize: '14px', color: 'var(--scf-text-muted)', marginBottom: '24px' },
   tabs: { display: 'flex', gap: '8px', marginBottom: '20px' },

@@ -8,6 +8,8 @@ import OpenAccount from './pages/OpenAccount'
 import Deposit from './pages/Deposit'
 import Withdraw from './pages/Withdraw'
 import Transfer from './pages/Transfer'
+import Cards from './pages/Cards'
+import Loans from './pages/Loans'
 import AdminPanel from './pages/AdminPanel'
 
 function ProtectedRoute({ children, adminOnly = false }) {
@@ -38,6 +40,8 @@ function App() {
         <Route path="/deposit" element={<ProtectedRoute><Deposit /></ProtectedRoute>} />
         <Route path="/withdraw" element={<ProtectedRoute><Withdraw /></ProtectedRoute>} />
         <Route path="/transfer" element={<ProtectedRoute><Transfer /></ProtectedRoute>} />
+        <Route path="/cards" element={<ProtectedRoute><Cards /></ProtectedRoute>} />
+        <Route path="/loans" element={<ProtectedRoute><Loans /></ProtectedRoute>} />
         <Route
           path="/admin"
           element={<ProtectedRoute adminOnly><AdminPanel /></ProtectedRoute>}

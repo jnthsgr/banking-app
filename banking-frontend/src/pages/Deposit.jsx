@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar'
+import AppLayout from '../components/AppLayout'
 import { accountService } from '../services/accountService'
 import { transactionService } from '../services/transactionService'
 import { formatCurrency } from '../utils/formatCurrency'
@@ -39,8 +39,7 @@ export default function Deposit() {
   }
 
   if (success) return (
-    <div style={styles.page}>
-      <Navbar />
+    <AppLayout section="Deposit">
       <div style={styles.container}>
         <div style={styles.card}>
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
@@ -55,12 +54,11 @@ export default function Deposit() {
           </div>
         </div>
       </div>
-    </div>
+    </AppLayout>
   )
 
   return (
-    <div style={styles.page}>
-      <Navbar />
+    <AppLayout section="Deposit">
       <div style={styles.container}>
         <div style={styles.card}>
           <h2 style={styles.title}>Deposit Funds</h2>
@@ -108,13 +106,12 @@ export default function Deposit() {
           </form>
         </div>
       </div>
-    </div>
+    </AppLayout>
   )
 }
 
 const styles = {
-  page: { minHeight: '100vh', background: '#f0f2f5' },
-  container: { maxWidth: '480px', margin: '0 auto', padding: '48px 24px' },
+  container: { maxWidth: '480px', margin: '0 auto', padding: '20px 0 48px' },
   card: { background: '#fff', borderRadius: '16px', padding: '40px', boxShadow: '0 2px 16px rgba(0,0,0,0.08)' },
   title: { fontSize: '22px', fontWeight: '700', color: '#1B4F72', marginBottom: '24px' },
   error: { background: '#fdecea', color: '#c0392b', padding: '10px 14px', borderRadius: '8px', fontSize: '14px', marginBottom: '16px' },

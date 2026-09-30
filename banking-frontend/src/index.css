@@ -62,4 +62,7 @@ a {
   .scf-auth-brand {
     display: none !important;
   }
+  .scf-split-row {
+    grid-template-columns: 1fr !important;
+  }
 }

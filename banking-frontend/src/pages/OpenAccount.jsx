@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar'
+import AppLayout from '../components/AppLayout'
 import { accountService } from '../services/accountService'
 
 export default function OpenAccount() {
@@ -24,8 +24,7 @@ export default function OpenAccount() {
   }
 
   return (
-    <div style={styles.page}>
-      <Navbar />
+    <AppLayout section="Open Account">
       <div style={styles.container}>
         <div style={styles.card}>
           <h2 style={styles.title}>Open a New Account</h2>
@@ -78,13 +77,12 @@ export default function OpenAccount() {
           </form>
         </div>
       </div>
-    </div>
+    </AppLayout>
   )
 }
 
 const styles = {
-  page: { minHeight: '100vh', background: '#f0f2f5' },
-  container: { maxWidth: '520px', margin: '0 auto', padding: '48px 24px' },
+  container: { maxWidth: '520px', margin: '0 auto', padding: '20px 0 48px' },
   card: {
     background: '#fff',
     borderRadius: '16px',

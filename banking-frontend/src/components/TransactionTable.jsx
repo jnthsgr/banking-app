@@ -1,6 +1,8 @@
 import { formatCurrency } from '../utils/formatCurrency'
 import { formatDate } from '../utils/formatDate'
 
+const CREDIT_TYPES = new Set(['DEPOSIT', 'TRANSFER_CREDIT', 'LOAN_DISBURSEMENT'])
+
 export default function TransactionTable({ transactions, page = 0, totalPages = 1, onPageChange }) {
   if (!transactions || transactions.length === 0) {
     return (
@@ -11,14 +13,14 @@ export default function TransactionTable({ transactions, page = 0, totalPages = 
   }
 
   const getTypeStyle = (type) => {
-    if (type === 'DEPOSIT' || type === 'TRANSFER_CREDIT') {
+    if (CREDIT_TYPES.has(type)) {
       return { color: '#2e7d32', background: '#e8f5e9' }
     }
     return { color: '#c0392b', background: '#fdecea' }
   }
 
   const getSign = (type) => {
-    return type === 'DEPOSIT' || type === 'TRANSFER_CREDIT' ? '+' : '-'
+    return CREDIT_TYPES.has(type) ? '+' : '-'
   }
 
   return (
