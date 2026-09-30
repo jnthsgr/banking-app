@@ -1,11 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:wght@600;700&display=swap');
+
+:root {
+  --scf-navy: #0b2545;
+  --scf-navy-light: #123b6b;
+  --scf-blue: #2e86c1;
+  --scf-gold: #c9962e;
+  --scf-bg: #f3f5f9;
+  --scf-surface: #ffffff;
+  --scf-text: #16213e;
+  --scf-text-muted: #64748b;
+  --scf-success: #1e8e5a;
+  --scf-danger: #b3261e;
+  --scf-border: #e2e8f0;
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background-color: #f0f2f5;
-  color: #1a1a2e;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: var(--scf-bg);
+  color: var(--scf-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select {
+  font-family: inherit;
+}
+
+button {
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+button:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+a {
+  color: inherit;
+}
+
+@media (max-width: 860px) {
+  .scf-auth-page {
+    grid-template-columns: 1fr !important;
+  }
+  .scf-auth-brand {
+    display: none !important;
+  }
 }

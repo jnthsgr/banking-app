@@ -1,5 +1,6 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import Logo from './Logo'
 
 export default function Navbar() {
   const { user, logout } = useAuth()
@@ -12,8 +13,13 @@ export default function Navbar() {
 
   return (
     <nav style={styles.nav}>
-      <div style={styles.logo}>🏦 BankApp</div>
+      <Link to="/dashboard" style={{ textDecoration: 'none' }}>
+        <Logo size={30} light />
+      </Link>
       <div style={styles.right}>
+        {user?.role === 'ADMIN' && (
+          <Link to="/admin" style={styles.adminLink}>Admin</Link>
+        )}
         <span style={styles.welcome}>Hello, {user?.fullName?.split(' ')[0]}</span>
         <span style={styles.badge}>{user?.role}</span>
         <button onClick={handleLogout} style={styles.logoutBtn}>Logout</button>
@@ -24,7 +30,7 @@ export default function Navbar() {
 
 const styles = {
   nav: {
-    background: 'linear-gradient(135deg, #1B4F72, #2E86C1)',
+    background: 'linear-gradient(135deg, var(--scf-navy-light), var(--scf-navy))',
     padding: '0 32px',
     height: '64px',
     display: 'flex',
@@ -35,16 +41,20 @@ const styles = {
     top: 0,
     zIndex: 100,
   },
-  logo: {
-    color: '#fff',
-    fontSize: '20px',
-    fontWeight: '700',
-    letterSpacing: '0.5px',
-  },
   right: {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
+  },
+  adminLink: {
+    color: '#fff',
+    fontSize: '13px',
+    fontWeight: '600',
+    textDecoration: 'none',
+    padding: '6px 12px',
+    borderRadius: '8px',
+    background: 'rgba(201,150,46,0.25)',
+    border: '1px solid rgba(201,150,46,0.5)',
   },
   welcome: {
     color: '#fff',

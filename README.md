@@ -1,42 +1,53 @@
-#  Banking Application
+# Saagar Capital Finance
 
-A full-stack banking system built with **Spring Boot 3** and **React**. Features JWT authentication, account management, and real-time fund transfers with full transaction history.
+A full-stack digital banking platform built with **Spring Boot 3** and **React**. Features JWT authentication, account management, real-time fund transfers, downloadable statements, and a back-office console for customer and account oversight.
 
- **Live Demo:** _Coming soon_  
- **Repo:** [github.com/jnthsgr/banking-app](https://github.com/jnthsgr/banking-app)
+> Saagar Capital Finance is a demonstration banking platform built to showcase full-stack engineering practices. It is not a licensed bank or financial institution, and no real funds are held, transferred, or insured.
+
+**Live Demo:** _Coming soon_
+**Repo:** [github.com/jnthsgr/banking-app](https://github.com/jnthsgr/banking-app)
 
 ---
 
-##  What This Project Does
+## What This Project Does
 
-This is a functional banking application where users can:
+Saagar Capital Finance is a functional online banking application where customers can:
 
-- Register and log in securely with JWT tokens
-- Open SAVINGS or CURRENT bank accounts
+- Register and sign in securely with JWT-based authentication
+- Open SAVINGS or CURRENT accounts
 - Deposit and withdraw funds
-- Transfer money between any two accounts
-- View complete transaction history with reference numbers and balance snapshots
+- Transfer money instantly between any two accounts
+- Browse paginated transaction history with reference numbers and running balances
+- Download a CSV account statement for any account
+
+Bank staff (role `ADMIN`) get a back-office console to:
+
+- View every customer and account on the platform
+- Freeze or unfreeze an account to stop it from transacting
 
 ---
 
-##  Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
 | Language | Java 17 |
 | Backend Framework | Spring Boot 3.5 |
 | Authentication | Spring Security + JWT |
+| Authorization | Method-level security (`@PreAuthorize`, role-based) |
 | Password Hashing | BCrypt |
+| Concurrency Control | JPA optimistic locking (`@Version`) on account balances |
 | ORM | JPA / Hibernate |
 | Database | MySQL |
 | Build Tool | Maven |
 | Frontend | React 18 + Vite |
 | HTTP Client | Axios |
 | Routing | React Router DOM |
+| Typography | Inter / Fraunces (Google Fonts) |
 
 ---
 
-##  Project Structure
+## Project Structure
 ```
 banking-app/
 ├── banking-backend/                  # Spring Boot REST API
@@ -48,30 +59,31 @@ banking-app/
 │       ├── dto/                      # Request / Response objects
 │       ├── security/                 # JWT filter, token utility
 │       ├── config/                   # Security + CORS configuration
-│       └── exception/                # Global exception handler
+│       └── exception/                # Typed exceptions + global handler
 │
 └── banking-frontend/                 # React UI
     └── src/
-        ├── pages/                    # Login, Register, Dashboard, Transfer...
-        ├── components/               # Navbar, AccountCard, TransactionTable
+        ├── pages/                    # Landing, Login, Register, Dashboard, Admin...
+        ├── components/               # Navbar, Footer, Logo, AccountCard, TransactionTable
         ├── services/                 # API call functions
         ├── context/                  # Auth context with JWT state
-        └── utils/                    # Axios instance, formatCurrency
+        └── utils/                    # Axios instance, formatCurrency, formatDate
 ```
 
 ---
 
-##  How Authentication Works
+## How Authentication Works
 
 1. User registers → password is **BCrypt hashed** → saved to MySQL
 2. User logs in → server validates password → returns a **signed JWT token**
-3. Frontend stores JWT → **Axios interceptor** attaches it to every request automatically
-4. Backend **JWT filter** validates the token on every protected endpoint
-5. Invalid or expired token → automatically redirected to login
+3. Frontend stores the JWT → an **Axios interceptor** attaches it to every request automatically
+4. Backend **JWT filter** validates the token and loads the user's role on every protected endpoint
+5. Admin-only routes are enforced both at the security-filter layer and via `@PreAuthorize("hasRole('ADMIN')")` on the controller
+6. Invalid or expired token → automatically redirected to login
 
 ---
 
-##  API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Auth Required | Description |
 |--------|----------|---------------|-------------|
@@ -83,11 +95,17 @@ banking-app/
 | POST | `/api/transactions/deposit` | Yes | Deposit funds |
 | POST | `/api/transactions/withdraw` | Yes | Withdraw funds |
 | POST | `/api/transactions/transfer` | Yes | Transfer to another account |
-| GET | `/api/transactions/history/{accountNumber}` | Yes | Transaction history |
+| GET | `/api/transactions/history/{accountNumber}` | Yes | Full transaction history |
+| GET | `/api/transactions/history/{accountNumber}/page` | Yes | Paginated transaction history (`page`, `size`) |
+| GET | `/api/transactions/statement/{accountNumber}` | Yes | Download a CSV statement |
+| GET | `/api/admin/users` | Yes (ADMIN) | List all customers |
+| GET | `/api/admin/accounts` | Yes (ADMIN) | List all accounts |
+| PATCH | `/api/admin/accounts/{accountNumber}/freeze` | Yes (ADMIN) | Freeze an account |
+| PATCH | `/api/admin/accounts/{accountNumber}/unfreeze` | Yes (ADMIN) | Unfreeze an account |
 
 ---
 
-##  Setup — Backend
+## Setup — Backend
 
 ### Prerequisites
 - Java 17+
@@ -104,7 +122,7 @@ cd banking-app/banking-backend
 
 **2. Create the database**
 ```sql
-CREATE DATABASE banking_db;
+CREATE DATABASE saagar_capital_finance;
 ```
 
 **3. Configure application properties**
@@ -124,12 +142,12 @@ jwt.secret=YOUR_SECRET_KEY_MINIMUM_32_CHARACTERS
 mvn spring-boot:run
 ```
 
-Backend runs at `http://localhost:8080`  
-Hibernate auto-creates all tables on first run.
+Backend runs at `http://localhost:8080`
+Hibernate auto-creates all tables on first run. The first registered user is a `CUSTOMER`; promote a user to `ADMIN` directly in the `users` table to access the back office.
 
 ---
 
-##  Setup — Frontend
+## Setup — Frontend
 
 ### Prerequisites
 - Node.js 18+
@@ -145,7 +163,7 @@ Frontend runs at `http://localhost:5173`
 
 ---
 
-##  Database Schema
+## Database Schema
 ```
 users
 ├── id (PK)
@@ -164,6 +182,7 @@ accounts
 ├── account_type (SAVINGS / CURRENT)
 ├── balance
 ├── status (ACTIVE / FROZEN)
+├── version (optimistic lock)
 ├── user_id (FK → users)
 ├── created_at
 └── updated_at
@@ -181,18 +200,24 @@ transactions
 
 ---
 
-##  Key Technical Decisions
+## Key Technical Decisions
 
-**Why JWT over sessions?**  
+**Why JWT over sessions?**
 Stateless authentication scales better — no server-side session storage needed. Every request is self-contained.
 
-**Why BCrypt?**  
+**Why BCrypt?**
 One-way hashing with a random salt — even identical passwords produce different hashes. Cannot be reversed.
 
-**Why @Transactional on transfers?**  
+**Why `@Transactional` on transfers?**
 If debiting account A succeeds but crediting account B fails, the entire operation rolls back automatically. No money disappears.
 
-**Why DTOs instead of exposing entities?**  
+**Why optimistic locking (`@Version`) on accounts?**
+Two concurrent requests against the same account (e.g. a withdrawal racing a transfer) could otherwise both read the same starting balance and overwrite each other's update. Optimistic locking detects the conflict and fails one request with a `409 Conflict` instead of silently corrupting the balance.
+
+**Why typed exceptions instead of generic `RuntimeException`?**
+`ResourceNotFoundException`, `InsufficientFundsException`, `AccountFrozenException`, etc. map to precise HTTP status codes (404, 422, 409...) through a single global exception handler, so API consumers get a consistent, predictable error contract instead of everything collapsing to `400 Bad Request`.
+
+**Why DTOs instead of exposing entities?**
 Prevents leaking internal fields like hashed passwords, controls exactly what the API exposes, and decouples the database schema from the API contract.
 
 ---

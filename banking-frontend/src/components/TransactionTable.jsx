@@ -1,7 +1,7 @@
 import { formatCurrency } from '../utils/formatCurrency'
 import { formatDate } from '../utils/formatDate'
 
-export default function TransactionTable({ transactions }) {
+export default function TransactionTable({ transactions, page = 0, totalPages = 1, onPageChange }) {
   if (!transactions || transactions.length === 0) {
     return (
       <div style={styles.empty}>
@@ -65,6 +65,26 @@ export default function TransactionTable({ transactions }) {
           ))}
         </tbody>
       </table>
+
+      {onPageChange && totalPages > 1 && (
+        <div style={styles.pagination}>
+          <button
+            style={{ ...styles.pageBtn, opacity: page === 0 ? 0.4 : 1 }}
+            disabled={page === 0}
+            onClick={() => onPageChange(page - 1)}
+          >
+            ‹ Previous
+          </button>
+          <span style={styles.pageInfo}>Page {page + 1} of {totalPages}</span>
+          <button
+            style={{ ...styles.pageBtn, opacity: page >= totalPages - 1 ? 0.4 : 1 }}
+            disabled={page >= totalPages - 1}
+            onClick={() => onPageChange(page + 1)}
+          >
+            Next ›
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -108,5 +128,28 @@ const styles = {
     textAlign: 'center',
     color: '#95a5a6',
     fontSize: '14px',
+  },
+  pagination: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '16px',
+    padding: '14px',
+    borderTop: '1px solid #e8ecf0',
+  },
+  pageBtn: {
+    background: 'none',
+    border: '1.5px solid #dde1e7',
+    borderRadius: '8px',
+    padding: '7px 14px',
+    fontSize: '12.5px',
+    fontWeight: '600',
+    color: 'var(--scf-navy)',
+    cursor: 'pointer',
+  },
+  pageInfo: {
+    fontSize: '12.5px',
+    color: '#7f8c8d',
+    fontWeight: '600',
   },
 }

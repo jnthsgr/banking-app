@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
+import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
@@ -7,27 +8,41 @@ import OpenAccount from './pages/OpenAccount'
 import Deposit from './pages/Deposit'
 import Withdraw from './pages/Withdraw'
 import Transfer from './pages/Transfer'
+import AdminPanel from './pages/AdminPanel'
 
-function ProtectedRoute({ children }) {
-  const { token, loading } = useAuth()
+function ProtectedRoute({ children, adminOnly = false }) {
+  const { token, user, loading } = useAuth()
   if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading...</div>
-  return token ? children : <Navigate to="/login" replace />
+  if (!token) return <Navigate to="/login" replace />
+  if (adminOnly && user?.role !== 'ADMIN') return <Navigate to="/dashboard" replace />
+  return children
 }
 
 function App() {
-  const { token } = useAuth()
+  const { token, loading } = useAuth()
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={token ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/" element={<Landing />} />
+        <Route
+          path="/login"
+          element={!loading && token ? <Navigate to="/dashboard" replace /> : <Login />}
+        />
+        <Route
+          path="/register"
+          element={!loading && token ? <Navigate to="/dashboard" replace /> : <Register />}
+        />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/open-account" element={<ProtectedRoute><OpenAccount /></ProtectedRoute>} />
         <Route path="/deposit" element={<ProtectedRoute><Deposit /></ProtectedRoute>} />
         <Route path="/withdraw" element={<ProtectedRoute><Withdraw /></ProtectedRoute>} />
         <Route path="/transfer" element={<ProtectedRoute><Transfer /></ProtectedRoute>} />
+        <Route
+          path="/admin"
+          element={<ProtectedRoute adminOnly><AdminPanel /></ProtectedRoute>}
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   )

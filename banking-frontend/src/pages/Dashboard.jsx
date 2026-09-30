@@ -3,27 +3,31 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import AccountCard from '../components/AccountCard'
 import TransactionTable from '../components/TransactionTable'
+import Footer from '../components/Footer'
 import { accountService } from '../services/accountService'
 import { transactionService } from '../services/transactionService'
 import { formatCurrency } from '../utils/formatCurrency'
+
+const PAGE_SIZE = 8
 
 export default function Dashboard() {
   const navigate = useNavigate()
   const [accounts, setAccounts] = useState([])
   const [selectedAccount, setSelectedAccount] = useState(null)
   const [transactions, setTransactions] = useState([])
+  const [page, setPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
   const [txnLoading, setTxnLoading] = useState(false)
   const [error, setError] = useState('')
+  const [downloading, setDownloading] = useState(false)
 
-  // Load accounts on mount
   useEffect(() => {
     loadAccounts()
   }, [])
 
-  // Load transactions when selected account changes
   useEffect(() => {
-    if (selectedAccount) loadTransactions(selectedAccount.accountNumber)
+    if (selectedAccount) loadTransactions(selectedAccount.accountNumber, 0)
   }, [selectedAccount])
 
   const loadAccounts = async () => {
@@ -38,15 +42,33 @@ export default function Dashboard() {
     }
   }
 
-  const loadTransactions = async (accountNumber) => {
+  const loadTransactions = async (accountNumber, pageNum) => {
     setTxnLoading(true)
     try {
-      const data = await transactionService.getHistory(accountNumber)
-      setTransactions(data)
+      const data = await transactionService.getHistoryPaged(accountNumber, pageNum, PAGE_SIZE)
+      setTransactions(data.content)
+      setTotalPages(data.totalPages || 1)
+      setPage(data.number || 0)
     } catch {
       setTransactions([])
     } finally {
       setTxnLoading(false)
+    }
+  }
+
+  const handlePageChange = (newPage) => {
+    if (selectedAccount) loadTransactions(selectedAccount.accountNumber, newPage)
+  }
+
+  const handleDownload = async () => {
+    if (!selectedAccount) return
+    setDownloading(true)
+    try {
+      await transactionService.downloadStatement(selectedAccount.accountNumber)
+    } catch {
+      setError('Failed to download statement')
+    } finally {
+      setDownloading(false)
     }
   }
 
@@ -137,22 +159,36 @@ export default function Dashboard() {
               <h2 style={styles.sectionTitle}>
                 Transaction History — {selectedAccount.accountNumber}
               </h2>
+              <button
+                style={styles.statementBtn}
+                onClick={handleDownload}
+                disabled={downloading}
+              >
+                {downloading ? 'Preparing...' : '⬇ Download Statement'}
+              </button>
             </div>
             {txnLoading ? (
               <div style={styles.center}>Loading transactions...</div>
             ) : (
-              <TransactionTable transactions={transactions} />
+              <TransactionTable
+                transactions={transactions}
+                page={page}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
             )}
           </div>
         )}
 
       </div>
+
+      <Footer />
     </div>
   )
 }
 
 const styles = {
-  page: { minHeight: '100vh', background: '#f0f2f5' },
+  page: { minHeight: '100vh', background: 'var(--scf-bg)' },
   container: { maxWidth: '1100px', margin: '0 auto', padding: '32px 24px' },
   center: { padding: '60px', textAlign: 'center', color: '#7f8c8d' },
   summaryBar: {
@@ -168,10 +204,10 @@ const styles = {
   },
   summaryItem: { display: 'flex', flexDirection: 'column', gap: '4px' },
   summaryLabel: { fontSize: '12px', color: '#95a5a6', fontWeight: '600', letterSpacing: '0.5px' },
-  summaryValue: { fontSize: '22px', fontWeight: '700', color: '#1B4F72' },
+  summaryValue: { fontSize: '22px', fontWeight: '700', color: 'var(--scf-navy)' },
   summaryActions: { display: 'flex', gap: '10px', marginLeft: 'auto', flexWrap: 'wrap' },
   actionBtn: {
-    background: '#2E86C1',
+    background: 'var(--scf-blue)',
     color: '#fff',
     border: 'none',
     padding: '10px 18px',
@@ -210,7 +246,7 @@ const styles = {
   },
   createBtn: {
     marginTop: '16px',
-    background: '#2E86C1',
+    background: 'var(--scf-blue)',
     color: '#fff',
     border: 'none',
     padding: '12px 24px',
@@ -230,5 +266,17 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: '16px',
+    flexWrap: 'wrap',
+    gap: '12px',
+  },
+  statementBtn: {
+    background: 'transparent',
+    border: '1.5px solid var(--scf-border)',
+    color: 'var(--scf-navy)',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    fontSize: '12.5px',
+    fontWeight: '600',
+    cursor: 'pointer',
   },
 }

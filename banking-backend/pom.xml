@@ -11,8 +11,8 @@
     <groupId>com.banking</groupId>
     <artifactId>banking-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>banking-backend</name>
-    <description>banking-backend</description>
+    <name>saagar-capital-finance-api</name>
+    <description>Saagar Capital Finance — core banking REST API</description>
     <url/>
     <licenses>
         <license/>

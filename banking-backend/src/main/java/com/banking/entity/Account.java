@@ -31,6 +31,10 @@ public class Account {
     @Column(nullable = false)
     private AccountStatus status;
 
+    @Version
+    @Builder.Default
+    private Long version = 0L;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

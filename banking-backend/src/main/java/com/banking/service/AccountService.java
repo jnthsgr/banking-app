@@ -3,6 +3,8 @@ package com.banking.service;
 import com.banking.dto.AccountRequestDTO;
 import com.banking.dto.AccountResponseDTO;
 import com.banking.entity.*;
+import com.banking.exception.ForbiddenOperationException;
+import com.banking.exception.ResourceNotFoundException;
 import com.banking.repository.AccountRepository;
 import com.banking.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +26,7 @@ public class AccountService {
         String email = SecurityContextHolder.getContext()
                 .getAuthentication().getName();
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     private String generateAccountNumber() {
@@ -74,11 +76,11 @@ public class AccountService {
 
     public AccountResponseDTO getAccountByNumber(String accountNumber) {
         Account account = accountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new RuntimeException("Account not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found: " + accountNumber));
 
         User currentUser = getCurrentUser();
         if (!account.getUser().getId().equals(currentUser.getId())) {
-            throw new RuntimeException("Access denied");
+            throw new ForbiddenOperationException("You do not have access to this account");
         }
 
         return mapToDTO(account);

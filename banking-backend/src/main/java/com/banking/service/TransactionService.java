@@ -3,10 +3,16 @@ package com.banking.service;
 import com.banking.dto.TransactionRequestDTO;
 import com.banking.dto.TransactionResponseDTO;
 import com.banking.entity.*;
+import com.banking.exception.AccountFrozenException;
+import com.banking.exception.ForbiddenOperationException;
+import com.banking.exception.InsufficientFundsException;
+import com.banking.exception.ResourceNotFoundException;
 import com.banking.repository.AccountRepository;
 import com.banking.repository.TransactionRepository;
 import com.banking.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,20 +33,20 @@ public class TransactionService {
         String email = SecurityContextHolder.getContext()
                 .getAuthentication().getName();
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     private Account getVerifiedAccount(String accountNumber) {
         Account account = accountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new RuntimeException("Account not found: " + accountNumber));
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found: " + accountNumber));
 
         User currentUser = getCurrentUser();
         if (!account.getUser().getId().equals(currentUser.getId())) {
-            throw new RuntimeException("Access denied");
+            throw new ForbiddenOperationException("You do not have access to this account");
         }
 
         if (account.getStatus() == AccountStatus.FROZEN) {
-            throw new RuntimeException("Account is frozen");
+            throw new AccountFrozenException("This account is frozen and cannot transact");
         }
 
         return account;
@@ -96,7 +102,7 @@ public class TransactionService {
         Account account = getVerifiedAccount(request.getAccountNumber());
 
         if (account.getBalance() < request.getAmount()) {
-            throw new RuntimeException("Insufficient balance");
+            throw new InsufficientFundsException("Insufficient balance for this withdrawal");
         }
 
         account.setBalance(account.getBalance() - request.getAmount());
@@ -120,18 +126,18 @@ public class TransactionService {
 
         Account target = accountRepository
                 .findByAccountNumber(request.getTargetAccountNumber())
-                .orElseThrow(() -> new RuntimeException("Target account not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Target account not found"));
 
         if (target.getStatus() == AccountStatus.FROZEN) {
-            throw new RuntimeException("Target account is frozen");
+            throw new AccountFrozenException("Target account is frozen and cannot receive funds");
         }
 
         if (source.getAccountNumber().equals(target.getAccountNumber())) {
-            throw new RuntimeException("Cannot transfer to the same account");
+            throw new ForbiddenOperationException("Cannot transfer to the same account");
         }
 
         if (source.getBalance() < request.getAmount()) {
-            throw new RuntimeException("Insufficient balance");
+            throw new InsufficientFundsException("Insufficient balance for this transfer");
         }
 
         source.setBalance(source.getBalance() - request.getAmount());
@@ -164,5 +170,12 @@ public class TransactionService {
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
+    }
+
+    public Page<TransactionResponseDTO> getHistoryPaged(String accountNumber, Pageable pageable) {
+        Account account = getVerifiedAccount(accountNumber);
+        return transactionRepository
+                .findByAccountOrderByCreatedAtDesc(account, pageable)
+                .map(this::mapToDTO);
     }
 }
