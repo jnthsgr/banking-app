@@ -4,6 +4,7 @@ import com.banking.entity.CardStatus;
 import com.banking.entity.CardType;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
@@ -18,6 +19,6 @@ public class CardResponseDTO {
     private CardType cardType;
     private CardStatus status;
     private LocalDate expiryDate;
-    private Double creditLimit;
+    private BigDecimal creditLimit;
     private String accountNumber;
 }

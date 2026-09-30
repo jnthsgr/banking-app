@@ -3,6 +3,7 @@ package com.banking.service;
 import com.banking.dto.CardRequestDTO;
 import com.banking.dto.CardResponseDTO;
 import com.banking.entity.*;
+import com.banking.exception.AccountFrozenException;
 import com.banking.exception.ForbiddenOperationException;
 import com.banking.exception.ResourceNotFoundException;
 import com.banking.repository.AccountRepository;
@@ -13,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Random;
@@ -22,7 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CardService {
 
-    private static final double DEFAULT_CREDIT_LIMIT = 150000.0;
+    private static final BigDecimal DEFAULT_CREDIT_LIMIT = new BigDecimal("150000.00");
 
     private final CardRepository cardRepository;
     private final AccountRepository accountRepository;
@@ -74,6 +76,9 @@ public class CardService {
 
         if (!account.getUser().getId().equals(user.getId())) {
             throw new ForbiddenOperationException("You do not have access to this account");
+        }
+        if (account.getStatus() == AccountStatus.FROZEN) {
+            throw new AccountFrozenException("Cannot issue a card on a frozen account");
         }
 
         Card card = Card.builder()

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -57,7 +58,7 @@ public class AccountService {
         Account account = Account.builder()
                 .accountNumber(generateAccountNumber())
                 .accountType(request.getAccountType())
-                .balance(0.0)
+                .balance(BigDecimal.ZERO.setScale(2))
                 .status(AccountStatus.ACTIVE)
                 .user(user)
                 .build();

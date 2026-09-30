@@ -4,6 +4,7 @@ import com.banking.entity.LoanStatus;
 import com.banking.entity.LoanType;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -14,10 +15,10 @@ public class LoanResponseDTO {
 
     private Long id;
     private LoanType loanType;
-    private Double principalAmount;
+    private BigDecimal principalAmount;
     private Double interestRateApr;
     private Integer tenureMonths;
-    private Double monthlyInstallment;
+    private BigDecimal monthlyInstallment;
     private LoanStatus status;
     private String disbursementAccountNumber;
     private LocalDateTime createdAt;

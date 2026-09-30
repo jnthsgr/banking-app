@@ -3,6 +3,8 @@ package com.banking.dto;
 import com.banking.entity.LoanType;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -13,6 +15,6 @@ public class LoanProductDTO {
     private String displayName;
     private String description;
     private double interestRateApr;
-    private double maxAmount;
+    private BigDecimal maxAmount;
     private int maxTenureMonths;
 }

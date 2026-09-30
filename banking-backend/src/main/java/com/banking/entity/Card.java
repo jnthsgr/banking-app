@@ -3,6 +3,7 @@ package com.banking.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -39,7 +40,8 @@ public class Card {
     /**
      * Only populated for CREDIT cards.
      */
-    private Double creditLimit;
+    @Column(precision = 19, scale = 2)
+    private BigDecimal creditLimit;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)

@@ -15,6 +15,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,7 +31,7 @@ public class LoanService {
                     .displayName("Personal Loan")
                     .description("Unsecured funding for anything from a wedding to a medical emergency.")
                     .interestRateApr(11.5)
-                    .maxAmount(1_500_000)
+                    .maxAmount(new BigDecimal("1500000"))
                     .maxTenureMonths(60)
                     .build(),
             LoanProductDTO.builder()
@@ -37,7 +39,7 @@ public class LoanService {
                     .displayName("Home Loan")
                     .description("Finance a new home or renovate your existing one at a low fixed rate.")
                     .interestRateApr(8.25)
-                    .maxAmount(20_000_000)
+                    .maxAmount(new BigDecimal("20000000"))
                     .maxTenureMonths(360)
                     .build(),
             LoanProductDTO.builder()
@@ -45,7 +47,7 @@ public class LoanService {
                     .displayName("Auto Loan")
                     .description("Drive away today with fast approval on new and used vehicles.")
                     .interestRateApr(9.75)
-                    .maxAmount(2_500_000)
+                    .maxAmount(new BigDecimal("2500000"))
                     .maxTenureMonths(84)
                     .build(),
             LoanProductDTO.builder()
@@ -53,7 +55,7 @@ public class LoanService {
                     .displayName("Education Loan")
                     .description("Invest in your future with flexible repayment after graduation.")
                     .interestRateApr(7.5)
-                    .maxAmount(4_000_000)
+                    .maxAmount(new BigDecimal("4000000"))
                     .maxTenureMonths(120)
                     .build()
     );
@@ -81,11 +83,22 @@ public class LoanService {
                 .orElseThrow(() -> new ResourceNotFoundException("Unknown loan product: " + type));
     }
 
-    private double monthlyInstallment(double principal, double aprPercent, int months) {
+    /**
+     * EMI math is done in double precision (the compounding formula isn't exact
+     * in BigDecimal without a fixed MathContext anyway) and only the final,
+     * user-facing installment amount is rounded back to currency precision.
+     */
+    private BigDecimal monthlyInstallment(BigDecimal principal, double aprPercent, int months) {
+        double principalValue = principal.doubleValue();
         double monthlyRate = aprPercent / 100.0 / 12.0;
-        if (monthlyRate == 0) return principal / months;
-        double factor = Math.pow(1 + monthlyRate, months);
-        return principal * monthlyRate * factor / (factor - 1);
+        double emi;
+        if (monthlyRate == 0) {
+            emi = principalValue / months;
+        } else {
+            double factor = Math.pow(1 + monthlyRate, months);
+            emi = principalValue * monthlyRate * factor / (factor - 1);
+        }
+        return BigDecimal.valueOf(emi).setScale(2, RoundingMode.HALF_UP);
     }
 
     @Transactional
@@ -93,7 +106,7 @@ public class LoanService {
         User user = getCurrentUser();
         LoanProductDTO product = findProduct(request.getLoanType());
 
-        if (request.getAmount() > product.getMaxAmount()) {
+        if (request.getAmount().compareTo(product.getMaxAmount()) > 0) {
             throw new ForbiddenOperationException(
                     "Amount exceeds the maximum of " + product.getMaxAmount() + " for " + product.getDisplayName());
         }
@@ -124,7 +137,7 @@ public class LoanService {
         loanRepository.save(loan);
 
         // Instant disbursement: credit the account and log the transaction, mirroring TransactionService.deposit.
-        account.setBalance(account.getBalance() + request.getAmount());
+        account.setBalance(account.getBalance().add(request.getAmount()));
         accountRepository.save(account);
 
         Transaction txn = Transaction.builder()

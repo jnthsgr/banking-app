@@ -1,6 +1,5 @@
-import { createContext, useContext, useState } from 'react'
-
-const AuthContext = createContext(null)
+import { useState } from 'react'
+import { AuthContext } from './authContextObject'
 
 function readStoredUser() {
   try {
@@ -36,5 +35,3 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   )
 }
-
-export const useAuth = () => useContext(AuthContext)

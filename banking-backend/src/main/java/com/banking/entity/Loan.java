@@ -3,6 +3,7 @@ package com.banking.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -22,8 +23,8 @@ public class Loan {
     @Column(nullable = false)
     private LoanType loanType;
 
-    @Column(nullable = false)
-    private Double principalAmount;
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal principalAmount;
 
     @Column(nullable = false)
     private Double interestRateApr;

@@ -1,4 +1,4 @@
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 import Sidebar from './Sidebar'
 
 export default function AppLayout({ section, children }) {

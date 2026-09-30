@@ -17,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -65,8 +66,8 @@ public class TransactionService {
                 .build();
     }
 
-    private Transaction saveTransaction(Account account, Double amount,
-                                        TransactionType type, Double balanceAfter,
+    private Transaction saveTransaction(Account account, BigDecimal amount,
+                                        TransactionType type, BigDecimal balanceAfter,
                                         String description) {
         Transaction txn = Transaction.builder()
                 .account(account)
@@ -83,7 +84,7 @@ public class TransactionService {
     public TransactionResponseDTO deposit(TransactionRequestDTO request) {
         Account account = getVerifiedAccount(request.getAccountNumber());
 
-        account.setBalance(account.getBalance() + request.getAmount());
+        account.setBalance(account.getBalance().add(request.getAmount()));
         accountRepository.save(account);
 
         Transaction txn = saveTransaction(
@@ -101,11 +102,11 @@ public class TransactionService {
     public TransactionResponseDTO withdraw(TransactionRequestDTO request) {
         Account account = getVerifiedAccount(request.getAccountNumber());
 
-        if (account.getBalance() < request.getAmount()) {
+        if (account.getBalance().compareTo(request.getAmount()) < 0) {
             throw new InsufficientFundsException("Insufficient balance for this withdrawal");
         }
 
-        account.setBalance(account.getBalance() - request.getAmount());
+        account.setBalance(account.getBalance().subtract(request.getAmount()));
         accountRepository.save(account);
 
         Transaction txn = saveTransaction(
@@ -136,14 +137,14 @@ public class TransactionService {
             throw new ForbiddenOperationException("Cannot transfer to the same account");
         }
 
-        if (source.getBalance() < request.getAmount()) {
+        if (source.getBalance().compareTo(request.getAmount()) < 0) {
             throw new InsufficientFundsException("Insufficient balance for this transfer");
         }
 
-        source.setBalance(source.getBalance() - request.getAmount());
+        source.setBalance(source.getBalance().subtract(request.getAmount()));
         accountRepository.save(source);
 
-        target.setBalance(target.getBalance() + request.getAmount());
+        target.setBalance(target.getBalance().add(request.getAmount()));
         accountRepository.save(target);
 
         String desc = request.getDescription() != null

@@ -67,6 +67,20 @@ public class TransactionController {
     }
 
     /**
+     * Neutralizes CSV formula injection (CWE-1236): a description like
+     * "=cmd|'/c calc'!A1" would otherwise be evaluated as a formula by
+     * Excel/Sheets when the exported file is opened.
+     */
+    private String sanitizeCsvField(String value) {
+        if (value == null) return "";
+        String escaped = value.replace("\"", "'");
+        if (!escaped.isEmpty() && "=+-@\t\r".indexOf(escaped.charAt(0)) >= 0) {
+            escaped = "'" + escaped;
+        }
+        return escaped;
+    }
+
+    /**
      * Downloadable CSV account statement.
      */
     @GetMapping("/statement/{accountNumber}")
@@ -78,7 +92,7 @@ public class TransactionController {
         for (TransactionResponseDTO txn : transactions) {
             csv.append(txn.getCreatedAt().format(CSV_DATE_FORMAT)).append(',')
                     .append(txn.getTransactionType()).append(',')
-                    .append('"').append(txn.getDescription() == null ? "" : txn.getDescription().replace("\"", "'")).append('"').append(',')
+                    .append('"').append(sanitizeCsvField(txn.getDescription())).append('"').append(',')
                     .append(txn.getReferenceNumber()).append(',')
                     .append(txn.getAmount()).append(',')
                     .append(txn.getBalanceAfter()).append('\n');

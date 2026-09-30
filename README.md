@@ -47,6 +47,7 @@ Bank staff (role `ADMIN`) get a back-office console to:
 | Routing | React Router DOM |
 | Typography | Inter / Fraunces (Google Fonts) |
 | Containerization | Docker Compose (MySQL + Spring Boot + nginx) |
+| Testing | JUnit 5, Mockito, AssertJ; H2 in-memory DB for context tests |
 
 ---
 
@@ -112,6 +113,20 @@ banking-app/
 | GET | `/api/loans/products` | Yes | Loan product catalog (rates, limits, tenure) |
 | POST | `/api/loans/apply` | Yes | Apply for a loan — approved instantly and disbursed |
 | GET | `/api/loans/mine` | Yes | List my loans |
+
+---
+
+## Testing
+
+```bash
+cd banking-backend
+mvn test
+```
+
+The suite is real unit and context tests, not placeholders:
+
+- **Service-layer unit tests** (Mockito, no database required) covering the business rules that actually matter for a bank — insufficient funds, frozen-account transfers/withdrawals/card-issuance, transferring to the same account, cross-user access attempts, loan amount/tenure caps, duplicate email/phone on registration, wrong-password and suspended-account login — 27 tests across `AccountServiceTest`, `AuthServiceTest`, `CardServiceTest`, `LoanServiceTest`, and `TransactionServiceTest`.
+- **Spring context load test** against an in-memory H2 database (`src/test/resources/application.properties`), so it runs the same way in CI or on a machine with no MySQL installed — it isn't skipped or left as a stub.
 
 ---
 
@@ -239,7 +254,7 @@ accounts
 ├── id (PK)
 ├── account_number (UNIQUE)
 ├── account_type (SAVINGS / CURRENT)
-├── balance
+├── balance (DECIMAL(19,2))
 ├── status (ACTIVE / FROZEN)
 ├── version (optimistic lock)
 ├── user_id (FK → users)
@@ -248,9 +263,9 @@ accounts
 
 transactions
 ├── id (PK)
-├── amount
+├── amount (DECIMAL(19,2))
 ├── transaction_type (DEPOSIT / WITHDRAWAL / TRANSFER_DEBIT / TRANSFER_CREDIT / LOAN_DISBURSEMENT)
-├── balance_after
+├── balance_after (DECIMAL(19,2))
 ├── description
 ├── reference_number
 ├── account_id (FK → accounts)
@@ -263,14 +278,14 @@ cards
 ├── card_type (DEBIT / CREDIT)
 ├── status (ACTIVE / LOCKED)
 ├── expiry_date
-├── credit_limit (CREDIT cards only)
+├── credit_limit (DECIMAL(19,2), CREDIT cards only)
 ├── account_id (FK → accounts)
 └── created_at
 
 loans
 ├── id (PK)
 ├── loan_type (PERSONAL / HOME / AUTO / EDUCATION)
-├── principal_amount
+├── principal_amount (DECIMAL(19,2))
 ├── interest_rate_apr
 ├── tenure_months
 ├── status (APPROVED / CLOSED)
@@ -303,6 +318,12 @@ Prevents leaking internal fields like hashed passwords, controls exactly what th
 
 **Why instant loan disbursement?**
 This is a demonstration platform, so approved loans credit the chosen account immediately as a normal, logged `LOAN_DISBURSEMENT` transaction — reusing the same balance-update and transaction-history machinery as a deposit, rather than a separate disbursement pipeline.
+
+**Why `BigDecimal` instead of `double` for every money field?**
+`double` cannot represent most decimal fractions exactly — `1234.56 - 0.06` in floating point is `1234.4999999999998`, not `1234.50`. That kind of drift is a textbook bug in a banking system: balances silently disagree with the sum of their transactions after enough operations. Every currency field (`balance`, `amount`, `balanceAfter`, `creditLimit`, `principalAmount`) is `BigDecimal` backed by a `DECIMAL(19,2)` column, and every comparison uses `compareTo` rather than `equals` (`BigDecimal.equals` treats `100.0` and `100.00` as unequal because it considers scale, which is almost never what a balance check wants). Non-currency numbers — interest rates, tenure in months — stay as `double`/`int`, since a rate isn't money and doesn't need exact decimal arithmetic.
+
+**Why sanitize the CSV statement export?**
+A transaction description is free text the user controls. Without escaping, a description like `=cmd|'/c calc'!A1` would be evaluated as a live formula the moment the exported CSV is opened in Excel or Google Sheets — a real, named vulnerability class (CWE-1236, "CSV Injection"). Any field starting with `=`, `+`, `-`, `@`, tab, or carriage return gets a leading apostrophe prepended, which forces spreadsheet software to treat it as inert text.
 
 **A CORS gotcha worth knowing:** Spring's CORS `allowedMethods` list must explicitly include every HTTP verb your API uses. `PATCH` was missing from it for a while, which is invisible from `curl` (no CORS involved) but fails silently in the browser: the preflight `OPTIONS` request gets rejected before the real `PATCH` is ever sent. If you add a new verb to a controller, add it to `SecurityConfig.corsConfigurationSource()` too.
 

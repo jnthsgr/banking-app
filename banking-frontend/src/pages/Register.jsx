@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 import { authService } from '../services/authService'
 import Logo from '../components/Logo'
 
@@ -9,7 +9,7 @@ export default function Register() {
   const { login } = useAuth()
 
   const [form, setForm] = useState({
-    fullName: '', email: '', password: '', phoneNumber: ''
+    fullName: '', email: '', password: '', confirmPassword: '', phoneNumber: ''
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -21,10 +21,21 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
     setError('')
+
+    if (form.password.length < 8) {
+      setError('Password must be at least 8 characters')
+      return
+    }
+    if (form.password !== form.confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+
+    setLoading(true)
     try {
-      const data = await authService.register(form)
+      const { confirmPassword: _confirmPassword, ...payload } = form
+      const data = await authService.register(payload)
       login({ fullName: data.fullName, email: data.email, role: data.role }, data.token)
       navigate('/dashboard')
     } catch (err) {
@@ -108,6 +119,21 @@ export default function Register() {
                 value={form.password}
                 onChange={handleChange}
                 style={styles.input}
+                minLength={8}
+                required
+              />
+            </div>
+
+            <div style={styles.field}>
+              <label style={styles.label}>Confirm Password</label>
+              <input
+                name="confirmPassword"
+                type="password"
+                placeholder="Re-enter your password"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                style={styles.input}
+                minLength={8}
                 required
               />
             </div>

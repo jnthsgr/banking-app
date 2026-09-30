@@ -2,6 +2,7 @@ package com.banking.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -24,8 +25,8 @@ public class Account {
     @Column(nullable = false)
     private AccountType accountType;
 
-    @Column(nullable = false)
-    private Double balance;
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal balance;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

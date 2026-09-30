@@ -2,6 +2,7 @@ package com.banking.dto;
 
 import com.banking.entity.TransactionType;
 import lombok.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -11,9 +12,9 @@ import java.time.LocalDateTime;
 public class TransactionResponseDTO {
 
     private Long id;
-    private Double amount;
+    private BigDecimal amount;
     private TransactionType transactionType;
-    private Double balanceAfter;
+    private BigDecimal balanceAfter;
     private String description;
     private String referenceNumber;
     private String accountNumber;

@@ -2,6 +2,7 @@ package com.banking.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -17,15 +18,15 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Double amount;
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TransactionType transactionType;
 
-    @Column(nullable = false)
-    private Double balanceAfter;
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal balanceAfter;
 
     private String description;
 
