@@ -1,6 +1,6 @@
 # Saagar Capital Finance
 
-A full-stack digital banking platform built with **Spring Boot 3** and **React**. Features JWT authentication, account management, real-time fund transfers, downloadable statements, and a back-office console for customer and account oversight.
+A full-stack digital banking platform built with **Spring Boot 3** and **React**. Features JWT authentication, account management, real-time fund transfers, virtual debit/credit cards, instant-disbursement loan products, downloadable statements, and a back-office console for customer and account oversight.
 
 > Saagar Capital Finance is a demonstration banking platform built to showcase full-stack engineering practices. It is not a licensed bank or financial institution, and no real funds are held, transferred, or insured.
 
@@ -19,6 +19,8 @@ Saagar Capital Finance is a functional online banking application where customer
 - Transfer money instantly between any two accounts
 - Browse paginated transaction history with reference numbers and running balances
 - Download a CSV account statement for any account
+- Issue virtual debit or credit cards against any account, and lock/unlock them
+- Browse a catalog of loan products (Personal, Home, Auto, Education) and apply — approved loans are disbursed instantly as a logged transaction on the chosen account
 
 Bank staff (role `ADMIN`) get a back-office console to:
 
@@ -63,8 +65,8 @@ banking-app/
 │
 └── banking-frontend/                 # React UI
     └── src/
-        ├── pages/                    # Landing, Login, Register, Dashboard, Admin...
-        ├── components/               # Navbar, Footer, Logo, AccountCard, TransactionTable
+        ├── pages/                    # Landing, Login, Register, Dashboard, Cards, Loans, Admin...
+        ├── components/               # Sidebar, AppLayout, Footer, Logo, AccountCard, TransactionTable
         ├── services/                 # API call functions
         ├── context/                  # Auth context with JWT state
         └── utils/                    # Axios instance, formatCurrency, formatDate
@@ -102,6 +104,13 @@ banking-app/
 | GET | `/api/admin/accounts` | Yes (ADMIN) | List all accounts |
 | PATCH | `/api/admin/accounts/{accountNumber}/freeze` | Yes (ADMIN) | Freeze an account |
 | PATCH | `/api/admin/accounts/{accountNumber}/unfreeze` | Yes (ADMIN) | Unfreeze an account |
+| POST | `/api/cards` | Yes | Issue a debit or credit card on an account |
+| GET | `/api/cards` | Yes | List my cards |
+| PATCH | `/api/cards/{cardId}/lock` | Yes | Lock a card |
+| PATCH | `/api/cards/{cardId}/unlock` | Yes | Unlock a card |
+| GET | `/api/loans/products` | Yes | Loan product catalog (rates, limits, tenure) |
+| POST | `/api/loans/apply` | Yes | Apply for a loan — approved instantly and disbursed |
+| GET | `/api/loans/mine` | Yes | List my loans |
 
 ---
 
@@ -190,11 +199,33 @@ accounts
 transactions
 ├── id (PK)
 ├── amount
-├── transaction_type (DEPOSIT / WITHDRAWAL / TRANSFER_DEBIT / TRANSFER_CREDIT)
+├── transaction_type (DEPOSIT / WITHDRAWAL / TRANSFER_DEBIT / TRANSFER_CREDIT / LOAN_DISBURSEMENT)
 ├── balance_after
 ├── description
 ├── reference_number
 ├── account_id (FK → accounts)
+└── created_at
+
+cards
+├── id (PK)
+├── card_number (UNIQUE)
+├── cardholder_name
+├── card_type (DEBIT / CREDIT)
+├── status (ACTIVE / LOCKED)
+├── expiry_date
+├── credit_limit (CREDIT cards only)
+├── account_id (FK → accounts)
+└── created_at
+
+loans
+├── id (PK)
+├── loan_type (PERSONAL / HOME / AUTO / EDUCATION)
+├── principal_amount
+├── interest_rate_apr
+├── tenure_months
+├── status (APPROVED / CLOSED)
+├── user_id (FK → users)
+├── disbursement_account_id (FK → accounts)
 └── created_at
 ```
 
@@ -219,5 +250,10 @@ Two concurrent requests against the same account (e.g. a withdrawal racing a tra
 
 **Why DTOs instead of exposing entities?**
 Prevents leaking internal fields like hashed passwords, controls exactly what the API exposes, and decouples the database schema from the API contract.
+
+**Why instant loan disbursement?**
+This is a demonstration platform, so approved loans credit the chosen account immediately as a normal, logged `LOAN_DISBURSEMENT` transaction — reusing the same balance-update and transaction-history machinery as a deposit, rather than a separate disbursement pipeline.
+
+**A CORS gotcha worth knowing:** Spring's CORS `allowedMethods` list must explicitly include every HTTP verb your API uses. `PATCH` was missing from it for a while, which is invisible from `curl` (no CORS involved) but fails silently in the browser: the preflight `OPTIONS` request gets rejected before the real `PATCH` is ever sent. If you add a new verb to a controller, add it to `SecurityConfig.corsConfigurationSource()` too.
 
 ---
